@@ -7,50 +7,8 @@ library(harmony)
 library(DoubletFinder)
 library(tibble)
 library(ggplot2)
-setwd("/media/user/8Tb/scRNAseq/seurat_analysis/")
+
 load("seurat_objects_start.RData")
-
-
-# ============================================================== #
-# ============================================================== #
-# Scrublet doublet removal ===================================== #
-
-for (object_name in names(seurat_objects)) {
-  doublet_score_file <- file.path(
-    "scrublet_results",
-    paste0(object_name, "_doublet_scores.csv")
-  )
-  if (!file.exists(doublet_score_file)) {
-    warning(paste("File not found:", doublet_score_file, "Skipping..."))
-    next
-  }
-  doublet_scores <- read.csv(doublet_score_file)
-  if (nrow(doublet_scores) != ncol(seurat_objects[[object_name]])) {
-    stop(paste("Row mismatch for", object_name))
-  }
-  # Add metadata
-  seurat_objects[[object_name]] <- AddMetaData(
-    object   = seurat_objects[[object_name]],
-    metadata = doublet_scores$DoubletScore,
-    col.name = "DoubletScore"
-  )
-  seurat_objects[[object_name]] <- AddMetaData(
-    object   = seurat_objects[[object_name]],
-    metadata = as.logical(doublet_scores$PredictedDoublet),
-    col.name = "PredictedDoublet"
-  )
-}
-
-
-# Loop through each Seurat object and remove doublets
-for (object_name in names(seurat_objects)) {
-  # Get the current Seurat object
-  seu_obj <- seurat_objects[[object_name]]
-  seu_obj <- subset(seu_obj, subset = PredictedDoublet == FALSE)
-  seurat_objects[[object_name]] <- seu_obj
-}
-
-seurat_objects_scrubbed = seurat_objects # as a backup
 
 # ============================================================== #
 # ============================================================== #
@@ -170,14 +128,19 @@ for (name in names(seurat_objects)) {
   }
 }
 
+# ===================================================== #
+# QC filtering after doublets removal ================= #
+# ===================================================== #
+
+db_finder = seurat_objects_filtered
 # QC filtering after doublets removal
 for (obj_name in names(seurat_objects_filtered)) {
     data <- seurat_objects_filtered[[obj_name]]
     # Calculate the percentage of mitochondrial genes
     # Adjust the pattern "^MT-" to match your dataset's mitochondrial gene prefixes if needed
-    data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
+    data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^mt-")
     # Calculate the percentage of red cell genes
-    data[["percent.redcell"]] <- PercentageFeatureSet(data, features = c("HBA1", "HBA2", "HBB"))
+    data[["percent.redcell"]] <- PercentageFeatureSet(data, features = c("Hba-a1","Hba-a2","Hbb-bs","Hbb-bt"))
     # Filter based on percent.mt, percent.redcell and standard criteria
     data <- subset(
         data,
@@ -195,4 +158,5 @@ for (obj_name in names(seurat_objects_filtered)) {
     seurat_objects_filtered[[obj_name]] <- data
 }
 
-save(seurat_objects_filtered,seurat_objects,file="objects_post_filtering.RData")
+save(seurat_objects_filtered,seurat_objects,db_finder,file="objects_post_filtering.RData")
+

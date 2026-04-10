@@ -5,12 +5,15 @@ zcat sham.combined.fastq.gz > sham.combined.fastq
 
 # Sudo required until we can set up permissions for the nextflow output directories
 sudo nextflow run epi2me-labs/wf-single-cell \
-    --expected_cells 8000 \
+    --expected_cells 10000 \
     --fastq adeno.combined.fastq \
     --kit 3prime:v3 \
     --ref_genome_dir ~/reference/refdata-gex-GRCm39-2024-A \
-    --out_dir adeno_wf \
+    --out_dir adeno_combined_wf \
     -resume \
+    -threads 30 \
+    -matrix_max_mito 20 \
+    -mito_prefix mt- \
     -process.executor local \
     -process.maxForks 12 \
     -process.cpus 4 \
@@ -23,7 +26,12 @@ sudo nextflow run epi2me-labs/wf-single-cell \
     --ref_genome_dir ~/reference/refdata-gex-GRCm39-2024-A \
     --out_dir sham_wf \
     -resume \
+    -threads 30 \
+    -matrix_max_mito 20 \
+    -mito_prefix mt- \
     -process.executor local \
     -process.maxForks 12 \
     -process.cpus 4 \
     -process.memory 16.GB
+
+

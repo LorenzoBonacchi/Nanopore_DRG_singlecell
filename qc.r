@@ -35,33 +35,6 @@ for (subdir in subdirs) {
 save(seurat_objects, file="seurat_objects_start.RData")
 
 
-
-
-
-
-
-adeno <- merge(
-  x = seurat_objects[[1]],
-  y = list(
-    seurat_objects[[2]],
-    seurat_objects[[5]],
-    seurat_objects[[6]]
-  ),
-  add.cell.ids = c("1adeno1", "1adeno2", "2adeno1", "2adeno2"),
-  project = "adeno"
-)
-sham <- merge(
-  x = seurat_objects[[3]],
-  y = list(
-    seurat_objects[[4]],
-    seurat_objects[[7]],
-    seurat_objects[[8]]
-  ),
-  add.cell.ids = c("1sham1", "1sham2", "2sham1", "2sham2"),
-  project = "sham"
-)
-
-
 # Aggiungi metriche QC a ciascun oggetto
 for (obj_name in names(seurat_objects)) {
   obj <- seurat_objects[[obj_name]]
@@ -102,7 +75,6 @@ for (obj_name in names(seurat_objects)) {
 
 qc_summary
 
-
 for (obj_name in names(seurat_objects)) {
   obj <- seurat_objects[[obj_name]]
   
@@ -117,9 +89,61 @@ for (obj_name in names(seurat_objects)) {
   seurat_objects[[obj_name]] <- obj
 }
 
+png("qc_summary_n_cells_filtered.png", width = 800, height = 600)
+ggplot(qc_summary, aes(x = sample, y = n_cells, fill = sample)) +
+  geom_col() +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Numero di cellule per campione",
+    x = "Campione",
+    y = "Numero cellule"
+  )
+dev.off()
+
+qc_summary_2 <- data.frame()
+
+for (obj_name in names(seurat_objects_filtered)) {
+  obj <- seurat_objects_filtered[[obj_name]]
+  meta <- obj@meta.data
+  
+  temp <- data.frame(
+    sample = obj_name,
+    n_cells = ncol(obj),
+    median_nFeature = median(meta$nFeature_RNA),
+    median_nCount = median(meta$nCount_RNA),
+    median_percent_mt = median(meta$percent.mt),
+    median_percent_redcell = median(meta$percent.redcell),
+    mean_percent_mt = mean(meta$percent.mt),
+    mean_percent_redcell = mean(meta$percent.redcell)
+  )
+  
+  qc_summary_2 <- rbind(qc_summary_2, temp)
+}
+
+qc_summary_2
 
 
 
-
-
-
+png("qc_violin.png", width = 800, height = 600)
+for (obj_name in names(seurat_objects)) {
+  obj <- seurat_objects[[obj_name]]
+  
+  p <- VlnPlot(
+    obj,
+    features = c(
+      "nFeature_RNA",
+      "nCount_RNA",
+      "percent.mt",
+      "percent.redcell"
+    ),
+    ncol = 4,
+    pt.size = 0
+  ) 
+  
+  print(p)
+}
+dev.off()
