@@ -6,7 +6,6 @@ data_dir_raw <- "/media/user/8Tb/raw_analysis/raw"
 subdirs_raw <- list.dirs(data_dir_raw, recursive = FALSE)
 
 raw_objects <- list()
-
 for (subdir in subdirs_raw) {
 
   matrix_file  <- file.path(subdir, "matrix.mtx.gz")
