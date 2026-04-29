@@ -18,25 +18,45 @@ merged_seurat$condition <- ifelse(
 
 # Preprocess the merged object
 merged_seurat <- NormalizeData(merged_seurat)
-merged_seurat <- FindVariableFeatures(merged_seurat, selection.method = "vst", nfeatures = 2000)
+merged_seurat <- FindVariableFeatures(merged_seurat, selection.method = "vst", nfeatures = 3000)
 merged_seurat <- ScaleData(merged_seurat, vars.to.regress = c("percent.mt", "percent.redcell"))
 merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 # Run Harmony
 merged_seurat <- RunHarmony(
   object = merged_seurat,
-  group.by.vars = "condition", # Adjust this based on your batch metadata
+  group.by.vars = "orig.ident", # Adjust this based on your batch metadata
   dims.use = 1:30
 )
 
 # Update embeddings for downstream use
-resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
+#resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
+resolutions <- c(0.5) 
 merged_seurat <- RunUMAP(merged_seurat, reduction = "harmony", dims = 1:30)
 merged_seurat <- FindNeighbors(merged_seurat, reduction = "harmony", dims = 1:30)
 merged_seurat <- FindClusters(merged_seurat, resolution = resolutions)
 
+# Clusters polishing
+cluster_sizes <- table(merged_seurat$seurat_clusters)
+# scegli soglia
+threshold <- 50
+small_clusters <- names(cluster_sizes[cluster_sizes < threshold])
+merged_seurat_filtered <- subset(
+  merged_seurat,
+  subset = !(seurat_clusters %in% small_clusters)
+)
+
+# Re-clustering after filtering small clusters
+merged_seurat_filtered <- FindNeighbors(merged_seurat_filtered, dims = 1:20)
+merged_seurat_filtered <- FindClusters(merged_seurat_filtered, resolution = 0.5)
+
+
 Idents(merged_seurat) <- merged_seurat$RNA_snn_res.0.5 # da decidere
-merged_seurat$seurat_clusters <- merged_seurat$RNA_snn_res.0.5
-merged_seurat = JoinLayers(merged_seurat)
-markers <- FindAllMarkers(object = merged_seurat, logfc.threshold = 0.1, only.pos = TRUE, test.use="wilcox", min.pct = 0.01,assay="RNA")
+#merged_seurat$seurat_clusters <- merged_seurat$RNA_snn_res.0.5
+Idents(merged_seurat_filtered) <- merged_seurat_filtered$seurat_clusters # da decidere
+merged_seurat_filtered = JoinLayers(merged_seurat_filtered)
+markers <- FindAllMarkers(object = merged_seurat_filtered, logfc.threshold = 0.1, only.pos = TRUE, test.use="wilcox", min.pct = 0.01,assay="RNA")
+
 
 save(markers,merged_seurat,file="data_markers.RData")
+
+

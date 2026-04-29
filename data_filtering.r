@@ -58,8 +58,8 @@ run_doubletfinder_custom <- function(seu_sample_subset, multiplet_rate = NULL){
   
   # Finish pre-processing with min_pc
   sample <- RunUMAP(sample, dims = 1:min_pc)
-  sample <- FindNeighbors(object = sample, dims = 1:min_pc)              
-  sample <- FindClusters(object = sample, resolution = 0.1)
+  sample <- FindNeighbors(object = sample, dims = 1:30)              
+  sample <- FindClusters(object = sample, resolution = 0.5)
   
   # pK identification (no ground-truth) 
   #introduces artificial doublets in varying props, merges with real data set and 
@@ -84,7 +84,7 @@ run_doubletfinder_custom <- function(seu_sample_subset, multiplet_rate = NULL){
   
   # run DoubletFinder
   sample <- doubletFinder(seu = sample, 
-                          PCs = 1:min_pc, 
+                          PCs = 1:30, 
                           pK = optimal.pk, # the neighborhood size used to compute the number of artificial nearest neighbours
                           nExp = nExp.poi.adj) # number of expected real doublets
   # change name of metadata column with Singlet/Doublet information
@@ -146,8 +146,8 @@ for (obj_name in names(seurat_objects_filtered)) {
         data,
         subset = 
                  nFeature_RNA > 200 & 
-                 nFeature_RNA < 10000 & 
-                 percent.mt < 10 & 
+                 nFeature_RNA < 6000 & 
+                 percent.mt < 20 & 
                  percent.redcell < 10
     )
     # Normalize and preprocess the data
@@ -160,3 +160,8 @@ for (obj_name in names(seurat_objects_filtered)) {
 
 save(seurat_objects_filtered,seurat_objects,db_finder,file="objects_post_filtering.RData")
 
+
+sce_filtered <- lapply(sce_decont, function(x) {
+  x <- x[, x$decontX_contamination < 0.1]
+  return(x)
+})
