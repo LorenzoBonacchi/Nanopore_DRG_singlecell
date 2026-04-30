@@ -1,149 +1,134 @@
 library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(celda)
+library(stringr)
+merged_seurat = seurat_decounted
+View(merged_seurat@meta.data)
 
-data_dir <- "/home/lab-user/data/scRNAseq_epi2me/seurat_analysis/data_matrices_raw"
-subdirs <- list.dirs(data_dir, recursive = FALSE)
-seurat_objects <- list()
+merged_seurat$adeno1$log10GenesPerUMI <- log10(merged_seurat$adeno1$nFeature_RNA) / log10(merged_seurat$adeno1$nCount_RNA)
+merged_seurat$adeno1$mitoRatio <- PercentageFeatureSet(object = merged_seurat$adeno1, pattern = "^mt-")
+merged_seurat$adeno1$mitoRatio <- merged_seurat$adeno1$mitoRatio / 100
 
-for (subdir in subdirs) {
+merged_seurat$adeno2$log10GenesPerUMI <- log10(merged_seurat$adeno2$nFeature_RNA) / log10(merged_seurat$adeno2$nCount_RNA)
+merged_seurat$adeno2$mitoRatio <- PercentageFeatureSet(object = merged_seurat$adeno2, pattern = "^mt-")
+merged_seurat$adeno2$mitoRatio <- merged_seurat$adeno2$mitoRatio / 100
 
-  matrix_file <- file.path(subdir, "matrix.mtx.gz")
-  feature_file <- file.path(subdir, "features.tsv.gz")
-  barcode_file <- file.path(subdir, "barcodes.tsv.gz")
+merged_seurat$sham1$log10GenesPerUMI <- log10(merged_seurat$sham1$nFeature_RNA) / log10(merged_seurat$sham1$nCount_RNA)
+merged_seurat$sham1$mitoRatio <- PercentageFeatureSet(object = merged_seurat$sham1, pattern = "^mt-")
+merged_seurat$sham1$mitoRatio <- merged_seurat$sham1$mitoRatio / 100
 
-  if (file.exists(matrix_file) & file.exists(feature_file) & file.exists(barcode_file)) {
+merged_seurat$sham2$log10GenesPerUMI <- log10(merged_seurat$sham2$nFeature_RNA) / log10(merged_seurat$sham2$nCount_RNA)
+merged_seurat$sham2$mitoRatio <- PercentageFeatureSet(object = merged_seurat$sham2, pattern = "^mt-")
+merged_seurat$sham2$mitoRatio <- merged_seurat$sham2$mitoRatio / 100
 
-    dataset_name <- basename(subdir)
+merged_seurat <- merge(merged_seurat$adeno1, 
+                       y = merged_seurat[c("adeno2", "sham1", "sham2")], 
+                       add.cell.ids = names(merged_seurat[c("adeno1","adeno2", "sham1", "sham2")]), 
+                       project = "IntegratedProject")
 
-    matrix_data <- ReadMtx(
-      mtx = matrix_file,
-      cells = barcode_file,
-      features = feature_file
+metadata <- merged_seurat@meta.data
+metadata$cells <- rownames(metadata)
+
+# Rename columns
+metadata <- metadata %>%
+        dplyr::rename(seq_folder = orig.ident,
+                      nUMI = nCount_RNA,
+                      nGene = nFeature_RNA)
+
+
+metadata$sample <- NA
+metadata$sample[which(str_detect(metadata$cells, "^adeno"))] <- "adeno"
+metadata$sample[which(str_detect(metadata$cells, "^sham"))] <- "sham"
+merged_seurat@meta.data <- metadata
+
+# Cell counts
+metadata %>% 
+  	ggplot(aes(x=sample, fill=sample)) + 
+  	geom_bar() +
+  	theme_classic() +
+  	theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  	theme(plot.title = element_text(hjust=0.5, face="bold")) +
+  	ggtitle("NCells")
+
+# UMI counts
+metadata %>% 
+  	ggplot(aes(color=sample, x=nUMI, fill= sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	ylab("Cell density") +
+  	geom_vline(xintercept = 500)
+
+metadata %>% 
+  	ggplot(aes(color=sample, x=nUMI, fill= ident)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	ylab("Cell density") +
+  	geom_vline(xintercept = 500)
+
+# genes per cell
+metadata %>% 
+  	ggplot(aes(color=sample, x=nGene, fill= sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	theme_classic() +
+  	scale_x_log10() + 
+  	geom_vline(xintercept = 300)
+
+metadata %>% 
+  	ggplot(aes(color=sample, x=nGene, fill= ident)) + 
+  	geom_density(alpha = 0.2) + 
+  	theme_classic() +
+  	scale_x_log10() + 
+  	geom_vline(xintercept = 300)
+
+# UMI x Gene per cell
+metadata %>% 
+  	ggplot(aes(x=nUMI, y=nGene, color=mitoRatio)) + 
+  	geom_point() + 
+	scale_colour_gradient(low = "gray90", high = "black") +
+  	stat_smooth(method=lm) +
+  	scale_x_log10() + 
+  	scale_y_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 500) +
+  	geom_hline(yintercept = 250) +
+  	facet_wrap(~sample)
+
+metadata %>% 
+  	ggplot(aes(x=nUMI, y=nGene, color=mitoRatio)) + 
+  	geom_point() + 
+	scale_colour_gradient(low = "gray90", high = "black") +
+  	stat_smooth(method=lm) +
+  	scale_x_log10() + 
+  	scale_y_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 500) +
+  	geom_hline(yintercept = 250) +
+  	facet_wrap(~ident)
+
+# Mito ratio
+metadata %>% 
+  	ggplot(aes(color=sample, x=mitoRatio, fill=sample)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 0.2)
+
+metadata %>% 
+  	ggplot(aes(color=sample, x=mitoRatio, fill=ident)) + 
+  	geom_density(alpha = 0.2) + 
+  	scale_x_log10() + 
+  	theme_classic() +
+  	geom_vline(xintercept = 0.2)
+
+
+filtered <- subset(
+        merged_seurat,
+        subset = 
+                 nUMI > 500 & 
+                 nGene > 250 &
+                 log10GenesPerUMI > 0.80 & 
+                 mitoRatio < 0.2
     )
-
-    seurat_obj <- CreateSeuratObject(
-      counts = matrix_data,
-      project = dataset_name
-    )
-    seurat_obj$condition <- dataset_name #Condition and orig.ident are the same, need to change later for batch reference
-    seurat_objects[[dataset_name]] <- seurat_obj
-
-  } else {
-    message(paste("Missing files in:", subdir))
-  }
-}
-
-save(seurat_objects, file="seurat_objects_start.RData")
-
-
-# Aggiungi metriche QC a ciascun oggetto
-for (obj_name in names(seurat_objects)) {
-  obj <- seurat_objects[[obj_name]]
-  
-  # Percentuale geni mitocondriali
-  obj[["percent.mt"]] <- PercentageFeatureSet(obj, pattern = "^mt-")
-  
-  # Percentuale geni eritrocitari
-  obj[["percent.redcell"]] <- PercentageFeatureSet(
-    obj,
-    features = c("Hba-a1","Hba-a2","Hbb-bs","Hbb-bt")
-  )
-  
-  # Salva numero di cellule
-  obj$sample_name <- obj_name
-  
-  seurat_objects[[obj_name]] <- obj
-}
-qc_summary <- data.frame()
-
-for (obj_name in names(seurat_objects)) {
-  obj <- seurat_objects[[obj_name]]
-  meta <- obj@meta.data
-  
-  temp <- data.frame(
-    sample = obj_name,
-    n_cells = ncol(obj),
-    median_nFeature = median(meta$nFeature_RNA),
-    median_nCount = median(meta$nCount_RNA),
-    median_percent_mt = median(meta$percent.mt),
-    median_percent_redcell = median(meta$percent.redcell),
-    mean_percent_mt = mean(meta$percent.mt),
-    mean_percent_redcell = mean(meta$percent.redcell)
-  )
-  
-  qc_summary <- rbind(qc_summary, temp)
-}
-
-qc_summary
-
-for (obj_name in names(seurat_objects)) {
-  obj <- seurat_objects[[obj_name]]
-  
-  obj <- subset(
-    obj,
-    subset = nFeature_RNA > 200 &
-             nFeature_RNA < 10000 &
-             percent.mt < 10 &
-             percent.redcell < 10
-  )
-  
-  seurat_objects[[obj_name]] <- obj
-}
-
-png("qc_summary_n_cells_filtered.png", width = 800, height = 600)
-ggplot(qc_summary, aes(x = sample, y = n_cells, fill = sample)) +
-  geom_col() +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "none"
-  ) +
-  labs(
-    title = "Numero di cellule per campione",
-    x = "Campione",
-    y = "Numero cellule"
-  )
-dev.off()
-
-qc_summary_2 <- data.frame()
-
-for (obj_name in names(seurat_objects_filtered)) {
-  obj <- seurat_objects_filtered[[obj_name]]
-  meta <- obj@meta.data
-  
-  temp <- data.frame(
-    sample = obj_name,
-    n_cells = ncol(obj),
-    median_nFeature = median(meta$nFeature_RNA),
-    median_nCount = median(meta$nCount_RNA),
-    median_percent_mt = median(meta$percent.mt),
-    median_percent_redcell = median(meta$percent.redcell),
-    mean_percent_mt = mean(meta$percent.mt),
-    mean_percent_redcell = mean(meta$percent.redcell)
-  )
-  
-  qc_summary_2 <- rbind(qc_summary_2, temp)
-}
-
-qc_summary_2
-
-
-
-png("qc_violin.png", width = 800, height = 600)
-for (obj_name in names(seurat_objects)) {
-  obj <- seurat_objects[[obj_name]]
-  
-  p <- VlnPlot(
-    obj,
-    features = c(
-      "nFeature_RNA",
-      "nCount_RNA",
-      "percent.mt",
-      "percent.redcell"
-    ),
-    ncol = 4,
-    pt.size = 0
-  ) 
-  
-  print(p)
-}
-dev.off()

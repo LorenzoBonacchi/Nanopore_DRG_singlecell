@@ -145,8 +145,9 @@ for (obj_name in names(seurat_objects_filtered)) {
     data <- subset(
         data,
         subset = 
-                 nFeature_RNA > 200 & 
-                 nFeature_RNA < 6000 & 
+                 nFeature_RNA > 400 & 
+                 nFeature_RNA < 6000 &
+                 nCount_RNA > 250 & 
                  percent.mt < 20 & 
                  percent.redcell < 10
     )
@@ -165,3 +166,103 @@ sce_filtered <- lapply(sce_decont, function(x) {
   x <- x[, x$decontX_contamination < 0.1]
   return(x)
 })
+
+
+library(Seurat)
+library(dplyr)
+
+qc_stats_1 <- seurat_decounted$adeno1@meta.data %>%
+  summarise(
+    n_cells = n(),
+    mean_features = mean(nFeature_RNA),
+    median_features = median(nFeature_RNA),
+    sd_features = sd(nFeature_RNA),
+    min_features = min(nFeature_RNA),
+    max_features = max(nFeature_RNA),
+    q10 = quantile(nFeature_RNA, 0.10),
+    q25 = quantile(nFeature_RNA, 0.25),
+    q75 = quantile(nFeature_RNA, 0.75),
+    q90 = quantile(nFeature_RNA, 0.90)
+  )
+
+qc_stats_1
+
+qc_stats_2 <- seurat_decounted$adeno2@meta.data %>%
+  summarise(
+    n_cells = n(),
+    mean_features = mean(nFeature_RNA),
+    median_features = median(nFeature_RNA),
+    sd_features = sd(nFeature_RNA),
+    min_features = min(nFeature_RNA),
+    max_features = max(nFeature_RNA),
+    q10 = quantile(nFeature_RNA, 0.10),
+    q25 = quantile(nFeature_RNA, 0.25),
+    q75 = quantile(nFeature_RNA, 0.75),
+    q90 = quantile(nFeature_RNA, 0.90)
+  )
+
+qc_stats_2
+
+qc_stats_3 <- seurat_decounted$sham1@meta.data %>%
+  summarise(
+    n_cells = n(),
+    mean_features = mean(nFeature_RNA),
+    median_features = median(nFeature_RNA),
+    sd_features = sd(nFeature_RNA),
+    min_features = min(nFeature_RNA),
+    max_features = max(nFeature_RNA),
+    q10 = quantile(nFeature_RNA, 0.10),
+    q25 = quantile(nFeature_RNA, 0.25),
+    q75 = quantile(nFeature_RNA, 0.75),
+    q90 = quantile(nFeature_RNA, 0.90)
+  )
+
+qc_stats_3
+
+qc_stats_4 <- seurat_decounted$sham2@meta.data %>%
+  summarise(
+    n_cells = n(),
+    mean_features = mean(nFeature_RNA),
+    median_features = median(nFeature_RNA),
+    sd_features = sd(nFeature_RNA),
+    min_features = min(nFeature_RNA),
+    max_features = max(nFeature_RNA),
+    q10 = quantile(nFeature_RNA, 0.10),
+    q25 = quantile(nFeature_RNA, 0.25),
+    q75 = quantile(nFeature_RNA, 0.75),
+    q90 = quantile(nFeature_RNA, 0.90)
+  )
+
+qc_stats_4
+
+qc_stats_1
+qc_stats_2
+qc_stats_3
+qc_stats_4
+
+get_adaptive_thresholds <- function(seurat_obj) {
+  x <- seurat_obj$nFeature_RNA
+  med <- median(x)
+  mad_val <- mad(x)
+  q_low  <- quantile(x, 0.05)
+  q_high <- quantile(x, 0.95)
+  lower <- max(300, med - 2 * mad_val, q_low)
+  upper <- q_high
+  data.frame(
+    median = med,
+    mad = mad_val,
+    q5 = q_low,
+    q95 = q_high,
+    lower_threshold = lower,
+    upper_threshold = upper
+  )
+}
+thr <- get_adaptive_thresholds(seurat_objects$adeno1)
+seurat_obj <- subset(
+  seurat_objects,
+  subset =
+    nFeature_RNA > thr$lower_threshold &
+    nFeature_RNA < thr$upper_threshold &
+    nCount_RNA > 1500 &
+    percent.mt < 15
+)

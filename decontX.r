@@ -30,9 +30,8 @@ for (subdir in subdirs) {
 }
 
 
-
-
 # DecontX
+seurat_objects_filtered = seurat_objects
 sce_list <- lapply(seurat_objects_filtered, as.SingleCellExperiment)
 sce_decont <- lapply(sce_list, decontX)
 seurat_decont <- lapply(sce_decont, function(x) {
@@ -42,26 +41,39 @@ seurat_decont <- lapply(sce_decont, function(x) {
   return(seu)
 })
 
-sce_filtered <- lapply(sce_decont, function(x) {
-  x <- x[, x$decontX_contamination < 0.2]
-  return(x)
-})
+quantile(colData(sce_decont[[1]])$decontX_contamination,
+         probs = c(0.5, 0.75, 0.9, 0.95))
+quantile(colData(sce_decont[[2]])$decontX_contamination,
+         probs = c(0.5, 0.75, 0.9, 0.95))
+quantile(colData(sce_decont[[3]])$decontX_contamination,
+         probs = c(0.5, 0.75, 0.9, 0.95))
+quantile(colData(sce_decont[[4]])$decontX_contamination,
+         probs = c(0.5, 0.75, 0.9, 0.95))
 
+thresholds <- c(
+  adeno1 = 0.05,
+  adeno2 = 0.05,
+  sham1 = 0.1,
+  sham2 = 0.2
+)
+
+sce_filtered <- mapply(function(x, name) {
+  thr <- thresholds[[name]]
+  x[, x$decontX_contamination < thr]
+}, sce_decont, names(sce_decont), SIMPLIFY = FALSE)
 
 # per tornare su Seurat (da cofnermare)
 sce_to_seurat <- function(sce) {
-  
-  counts <- SummarizedExperiment::assay(sce, "decontXcounts")
-  
-  seu <- Seurat::CreateSeuratObject(
-    counts = counts,
-    project = "decontX",
-    min.cells = 0,
-    min.features = 0
-  )
-  
-  seu <- Seurat::AddMetaData(seu, colData(sce))
-  
-  return(seu)
+    counts <- celda::decontXcounts(sce)
+    seu <- Seurat::CreateSeuratObject(
+        counts = counts,
+        project = "decontX",
+        min.cells = 0,
+        min.features = 0
+    )
+   meta <- as.data.frame(SummarizedExperiment::colData(sce))
+   seu <- Seurat::AddMetaData(seu, metadata = meta)
+   return(seu)
 }
 
+seurat_decounted <- lapply(sce_filtered, sce_to_seurat)

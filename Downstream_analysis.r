@@ -19,7 +19,7 @@ merged_seurat$condition <- ifelse(
 # Preprocess the merged object
 merged_seurat <- NormalizeData(merged_seurat)
 merged_seurat <- FindVariableFeatures(merged_seurat, selection.method = "vst", nfeatures = 3000)
-merged_seurat <- ScaleData(merged_seurat, vars.to.regress = c("percent.mt", "percent.redcell"))
+merged_seurat <- ScaleData(merged_seurat, vars.to.regress = c("mitoRatio"))
 merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 # Run Harmony
 merged_seurat <- RunHarmony(
