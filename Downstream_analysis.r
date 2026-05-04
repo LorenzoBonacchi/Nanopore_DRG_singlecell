@@ -24,7 +24,7 @@ merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 # Run Harmony
 merged_seurat <- RunHarmony(
   object = merged_seurat,
-  group.by.vars = "orig.ident", # Adjust this based on your batch metadata
+  group.by.vars = "ident", # Adjust this based on your batch metadata
   dims.use = 1:30
 )
 
@@ -38,7 +38,7 @@ merged_seurat <- FindClusters(merged_seurat, resolution = resolutions)
 # Clusters polishing
 cluster_sizes <- table(merged_seurat$seurat_clusters)
 # scegli soglia
-threshold <- 50
+threshold <- 50 #20 for exploration 
 small_clusters <- names(cluster_sizes[cluster_sizes < threshold])
 merged_seurat_filtered <- subset(
   merged_seurat,
