@@ -1,16 +1,12 @@
 library(Seurat)
 library(harmony)
-library(DoubletFinder)
 library(tibble)
 library(presto)
-load("objects_post_filtering.RData")
+library(celldex)
+library(SingleR)
+library(harmony)
 
-
-merged_seurat <- merge(seurat_objects_filtered[[1]], 
-                       y = seurat_objects_filtered[-1], 
-                       add.cell.ids = names(seurat_objects_filtered), 
-                       project = "IntegratedProject")
-
+# This override the previous condition metadata to group adeno vs sham, batchs are in original ident
 merged_seurat$condition <- ifelse(
   grepl("adeno", merged_seurat$condition),
   "adeno",
@@ -25,7 +21,7 @@ merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 # Run Harmony
 merged_seurat <- RunHarmony(
   object = merged_seurat,
-  group.by.vars = "ident", # Adjust this based on your batch metadata
+  group.by.vars = "orig.ident", # Adjust this based on your batch metadata
   dims.use = 1:30
 )
 
