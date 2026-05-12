@@ -196,7 +196,8 @@ macrophages = c("Mrc1","Cd68")
 capillary = c("S100a8")
 immune = c("Cd74")
 rbc = c("Hba-a1")
-all = c(schwann,fibroblasts,endothelial,smooth_muscle,macrophages,capillary,immune,rbc,neurons)
+rubbish = c("Malat1")
+all = c(schwann,fibroblasts,endothelial,smooth_muscle,macrophages,capillary,immune,rbc,neurons,rubbish)
 
 # ==================================================== #
 # Elife Schwann annotation

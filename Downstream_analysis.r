@@ -30,7 +30,7 @@ merged_seurat <- RunHarmony(
 
 # Update embeddings for downstream use
 #resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
-resolutions <- c(0.5) 
+#resolutions <- c(0.5) 
 merged_seurat <- RunUMAP(merged_seurat, reduction = "harmony", dims = 1:30)
 merged_seurat <- FindNeighbors(merged_seurat, reduction = "harmony", dims = 1:30)
 merged_seurat <- FindClusters(merged_seurat, resolution = resolutions)

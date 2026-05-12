@@ -36,7 +36,6 @@ metadata <- metadata %>%
                       nUMI = nCount_RNA,
                       nGene = nFeature_RNA)
 
-
 metadata$sample <- NA
 metadata$sample[which(str_detect(metadata$cells, "^adeno"))] <- "adeno"
 metadata$sample[which(str_detect(metadata$cells, "^sham"))] <- "sham"

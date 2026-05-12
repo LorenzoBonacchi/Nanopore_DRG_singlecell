@@ -8,7 +8,7 @@ library(celda)
 library(stringr)
 
 ###################################################################
-# adeno 1 run only
+# single run only 
 mat <- read.table(
   "adeno1_matrix_sicelore.txt",
   header = TRUE,
@@ -35,7 +35,7 @@ save(adeno1, file = "adeno1_decontX.RData")
 
 
 #####################################################################
-# per tuttee le altre, da confermare
+# "Whole datasets" # TO ADD DATA AS WE FINISH SICELORE PIPELINE
 # 01 Loading ------------------------------------------------------ #
 data_dir <- "/home/lab-user/data/seurat_sicelore_analysis"
 files <- list.files(
@@ -61,8 +61,10 @@ for (file in files) {
   seurat_obj$condition <- dataset_name
   seurat_objects[[dataset_name]] <- seurat_obj
 }
-# 02 QC ----------------------------------------------------------- #
 
+save(seurat_objects, file="exploratory_prefilters_qc.RData")
+
+# 02 QC ----------------------------------------------------------- #
 for (i in seq_along(seurat_objects)) {
   seurat_objects[[i]]$log10GenesPerUMI <-
     log10(seurat_objects[[i]]$nFeature_RNA) /
@@ -95,10 +97,10 @@ merged_seurat@meta.data <- metadata
 filtered <- subset(
         merged_seurat,
         subset = 
-                 nUMI > 250 & 
-                 nGene > 300 &
+                 nUMI > 200 & 
+                 nGene > 200 &
                  log10GenesPerUMI > 0.80 & 
-                 mitoRatio < 0.2
+                 mitoRatio < 0.15
     )
 # DecontX
 seurat_objects_filtered = seurat_objects
@@ -110,7 +112,7 @@ seurat_decont <- lapply(sce_decont, function(x) {
   return(seu)
 })
 
-
+save(merged_seurat, file="exploratory_postfilters_qc.RData")
 
 
 

@@ -4,8 +4,6 @@ library(celda)
 library(dplyr)
 library(stringr)
 
-
-
 data_dir <- "/home/lab-user/data/seurat_sicelore_analysis"
 files <- list.files(
   data_dir,
@@ -45,10 +43,10 @@ for (file in files) {
   seu <- subset(
     seu,
     subset =
-      nCount_RNA > 200 &
-      nFeature_RNA > 200 &
+      nCount_RNA > 500 &
+      #nFeature_RNA > 200 &
       log10GenesPerUMI > 0.80 &
-      mitoRatio < 0.15
+      mitoRatio < 0.1
   )
   # -------------------------------------------------
   # Preliminary clustering for decontX
