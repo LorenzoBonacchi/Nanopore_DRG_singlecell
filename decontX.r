@@ -3,7 +3,7 @@ library(celda)
 library(Seurat)
 library(SoupX)
 
-data_dir <- "/media/user/8Tb/raw_analysis/raw"
+data_dir <- "/home/lab-user/data/Epi2me_raw_analysis/raw"
 subdirs <- list.dirs(data_dir, recursive = FALSE)
 seurat_objects <- list()
 

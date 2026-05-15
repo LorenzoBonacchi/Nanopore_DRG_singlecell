@@ -129,5 +129,6 @@ filtered <- subset(
                  nUMI > 500 & 
                  nGene > 250 &
                  log10GenesPerUMI > 0.80 & 
+				 nGene < 1000 &
                  mitoRatio < 0.2
     )
