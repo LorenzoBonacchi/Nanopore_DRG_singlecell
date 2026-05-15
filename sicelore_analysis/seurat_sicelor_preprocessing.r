@@ -44,7 +44,7 @@ for (file in files) {
     seu,
     subset =
       nCount_RNA > 500 &
-      #nFeature_RNA > 200 &
+      nFeature_RNA > 200 &
       log10GenesPerUMI > 0.80 &
       mitoRatio < 0.1
   )

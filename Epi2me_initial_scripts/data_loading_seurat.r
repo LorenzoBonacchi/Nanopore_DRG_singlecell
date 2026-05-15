@@ -1,6 +1,13 @@
+
 library(Seurat)
 library(SoupX)
-data_dir <- "/media/user/8Tb/raw_analysis/raw"
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(celda)
+library(stringr)
+
+data_dir <- "/home/lab-user/data/Epi2me_raw_analysis/raw"
 subdirs <- list.dirs(data_dir, recursive = FALSE)
 seurat_objects <- list()
 
@@ -31,10 +38,11 @@ for (subdir in subdirs) {
     message(paste("Missing files in:", subdir))
   }
 }
+
 # ===================================================== #
 # Load processed objects and markers ========================= #
 # ===================================================== #
-data_dir_proc <- "/media/user/8Tb/raw_analysis/proc"
+data_dir_proc <- "/home/lab-user/data/Epi2me_raw_analysis/proc"
 subdirs <- list.dirs(data_dir_proc, recursive = FALSE)
 seurat_objects_proc <- list()
 for (subdir in subdirs) {
@@ -63,9 +71,7 @@ for (subdir in subdirs) {
 
 #save(seurat_objects, file="seurat_objects_start.RData")
 clean_objects <- list()
-
 for (name in names(seurat_objects)) {
-
   raw_obj <- seurat_objects[[name]]
   proc_obj <- seurat_objects_proc[[name]]
 
