@@ -125,8 +125,9 @@ seurat_objects_decont <- lapply(
     seu <- subset(
       seu,
       subset =
-        nCount_RNA > 200 &
+        nCount_RNA > 400 &
         nFeature_RNA > 200 &
+        nFeature_RNA < 10000 &
         log10GenesPerUMI > 0.80 &
         mitoRatio < 0.15
     )
