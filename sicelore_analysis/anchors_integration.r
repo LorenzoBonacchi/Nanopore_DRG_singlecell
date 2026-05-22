@@ -104,6 +104,11 @@ merged_seurat <- FindVariableFeatures(merged_seurat, selection.method = "vst", n
 merged_seurat <- ScaleData(merged_seurat, vars.to.regress = c("mitoRatio"))
 merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 
+sham <- NormalizeData(sham)
+sham <- FindVariableFeatures(sham, selection.method = "vst", nfeatures = 3000)
+sham <- ScaleData(sham, vars.to.regress = c("mitoRatio"))
+sham <- RunPCA(sham, npcs = 30)
+
 # Anchors integration
 adeno = merged_seurat
 sham = seurat_objects[[1]]
@@ -120,16 +125,17 @@ combined <- IntegrateData(
   anchorset = anchors,
   dims = 1:30
 )
-
+DefaultAssay(combined) <- "integrated"
 # Update embeddings for downstream use
 resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
 #resolutions <- c(0.5) 
-merged_seurat <- RunUMAP(merged_seurat, reduction = "anchors", dims = 1:30)
-merged_seurat <- FindNeighbors(merged_seurat, reduction = "anchors", dims = 1:30)
-merged_seurat <- FindClusters(merged_seurat, resolution = resolutions)
+combined <- ScaleData(combined, vars.to.regress = c("mitoRatio"))
+combined <- RunPCA(combined, npcs = 30)
+combined <- RunUMAP(combined, reduction = "pca", dims = 1:30)
+combined <- FindNeighbors(combined, reduction = "pca", dims = 1:30)
+combined <- FindClusters(combined, resolution = resolutions)
 
-Idents(merged_seurat) <- merged_seurat$integration_snn_res.0.5 
-
+Idents(combined) <- combined$integrated_snn_res.0.5 
 
 
 
@@ -155,8 +161,8 @@ neu_all = c(neurons, noci, itch, proprioceptive, mecha)
 glia_all = c(satellite, mschwann, nomschwann)
 immune_all = c(macrophages, capillary, immune)
 
-merged_seurat = JoinLayers(merged_seurat)
-markers <- FindAllMarkers(object = merged_seurat, logfc.threshold = 0.1, only.pos = TRUE, test.use="wilcox", min.pct = 0.01,assay="RNA")
+combined = JoinLayers(combined, assay="RNA")
+markers <- FindAllMarkers(object = combined, logfc.threshold = 0.1, only.pos = TRUE, test.use="wilcox", min.pct = 0.01,assay="RNA")
 
 
 library(dplyr)
@@ -164,6 +170,12 @@ library(dplyr)
 top25 <- markers %>%
   group_by(cluster) %>%
   slice_max(order_by = p_val_adj, n = 25, with_ties = FALSE) %>%
-  arrange(cluster, desc(p_val_adj))
+  arrange(cluster, desc(avg_log2FC))
+  
+markers24 <- FindMarkers(combined, ident.1 = 24)
+
+markers24 %>%
+  arrange(desc(avg_log2FC)) %>%
+  head(20)
 
 save(merged_seurat,top25, file = "adeno_preANCHOR_sicelore.RData")
