@@ -20,11 +20,11 @@ sudo nextflow run epi2me-labs/wf-single-cell \
     -process.memory 16.GB
 
 sudo nextflow run epi2me-labs/wf-single-cell \
-    --expected_cells 5000 \
-    --fastq adeno1_merged.fastq  \
+    --expected_cells 10000 \
+    --fastq sham1_sup.fastq  \
     --kit 3prime:v3 \
-    --ref_genome_dir ~/reference/refdata-gex-GRCm39-2024-A \
-    --out_dir adeno1_merged_5000_wf \
+    --ref_genome_dir /home/user/reference/refdata-gex-GRCm39-2024-A/fasta/genome.fa \
+    --out_dir sham1_sup_10000_wf \
     -resume \
     --threads 30 \
     --matrix_max_mito 20 \
