@@ -131,3 +131,33 @@ merged_seurat <- Reduce(
   function(x, y) merge(x, y),
   seurat_objects
 )
+
+
+gene_ids <- gsub("-.*", "", features)
+library(biomaRt)
+
+mart <- useEnsembl(
+  biomart = "genes",
+  dataset = "mmusculus_gene_ensembl"
+)
+
+annot <- getBM(
+  attributes = c("ensembl_gene_id", "external_gene_name"),
+  filters = "ensembl_gene_id",
+  values = gene_ids,
+  mart = mart
+)
+
+gene_map <- annot$external_gene_name
+names(gene_map) <- annot$ensembl_gene_id
+
+gene_symbols <- gene_map[gene_ids]
+gene_symbols[is.na(gene_symbols)] <- gene_ids[is.na(gene_symbols)]
+gene_map <- annot$external_gene_name
+names(gene_map) <- annot$ensembl_gene_id
+
+gene_symbols <- gene_map[gene_ids]
+gene_symbols[is.na(gene_symbols)] <- gene_ids[is.na(gene_symbols)]
+library(Matrix)
+
+counts_gene <- rowsum(counts, group = gene_symbols)

@@ -1,6 +1,4 @@
 
-
-
 convert_ENSGID_to_geneSymbol <- function(gene_count_matrix_path, 
                                          id_symbol_df = isoform_gene_dict, 
                                          output_file,

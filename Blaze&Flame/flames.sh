@@ -17,7 +17,7 @@ config_file <- create_config(
   do_barcode_demultiplex = FALSE,
   barcode_parameters.max_bc_editdistance = 3,
   isoform_parameters.min_sup_cnt = 10,
-  multithread_isoform_identification = TRUE,
+  multithread_isoform_identification = FALSE,
   oarfish_quantification = TRUE,
   additional_arguments.oarfish = c("--model-coverage")
 )
