@@ -8,7 +8,7 @@ docker run -it \
 
 library(FLAMES)
 setwd("/data")
-outdir <- "flames_out2"
+outdir <- "flames_out"
 dir.create(outdir, showWarnings = FALSE)
 config_file <- create_config(
   outdir = outdir,
