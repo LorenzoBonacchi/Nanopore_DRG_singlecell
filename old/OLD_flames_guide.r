@@ -188,7 +188,7 @@ seurat_objects <- list()
 # -------------------------
 # biomaRt ONCE (IMPORTANT optimization)
 # -------------------------
-mart <- useEnsembl("genes", dataset = "mmusculus_gene_ensembl")
+mart <- useEnsembl("genes", dataset = "mmusculus_gene_ensembl", mirror = "usewest")
 
 for (subdir in subdirs) {
 
@@ -340,3 +340,56 @@ merged_seurat <- Reduce(
   function(x, y) merge(x, y),
   seurat_objects
 )
+
+
+adeno = seurat_objects$counts_adeno1
+sham = seurat_objects$counts_sham1
+
+adeno = subset(adeno, subset = decontX_contamination < 0.4) # optional decontamination filter
+sham = subset(sham, subset = decontX_contamination < 0.4) # optional decontamination filter
+
+sham <- NormalizeData(sham)
+sham <- FindVariableFeatures(sham, selection.method = "vst", nfeatures = 3000)
+sham <- ScaleData(sham)
+sham <- RunPCA(sham, npcs = 30)
+
+adeno <- NormalizeData(adeno)
+adeno <- FindVariableFeatures(adeno, selection.method = "vst", nfeatures = 3000)
+adeno <- ScaleData(adeno)
+adeno <- RunPCA(adeno, npcs = 30)
+
+
+### 
+anchors <- FindIntegrationAnchors(
+  object.list = list(adeno, sham),
+  dims = 1:30
+)
+
+combined <- IntegrateData(
+  anchorset = anchors,
+  dims = 1:30
+)
+DefaultAssay(combined) <- "integrated"
+# Update embeddings for downstream use
+resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
+#resolutions <- c(0.5) 
+combined <- ScaleData(combined, vars.to.regress = c("mitoRatio"))
+combined <- RunPCA(combined, npcs = 30)
+combined <- RunUMAP(combined, reduction = "pca", dims = 1:30)
+combined <- FindNeighbors(combined, reduction = "pca", dims = 1:30)
+combined <- FindClusters(combined, resolution = resolutions)
+
+Idents(combined) <- combined$integrated_snn_res.0.5 
+
+
+
+
+matrix_data <- read.table(
+    file = "gene_count.csv",
+    header = TRUE,
+    row.names = 1,
+    sep = ",",
+    check.names = FALSE)
+
+matrix_data <- as.matrix(matrix_data)
+seu <- CreateSeuratObject(counts = matrix_data, project = "dataset_name")

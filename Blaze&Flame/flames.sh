@@ -8,7 +8,7 @@ docker run -it \
 
 library(FLAMES)
 setwd("/data")
-outdir <- "flames_out"
+outdir <- "flames_out2"
 dir.create(outdir, showWarnings = FALSE)
 config_file <- create_config(
   outdir = outdir,
@@ -18,7 +18,7 @@ config_file <- create_config(
   barcode_parameters.max_bc_editdistance = 3,
   isoform_parameters.min_sup_cnt = 10,
   multithread_isoform_identification = FALSE,
-  oarfish_quantification = TRUE,
+  oarfish_quantification = FALSE,
   additional_arguments.oarfish = c("--model-coverage")
 )
 
@@ -35,3 +35,49 @@ sce <- sc_long_pipeline(
 # Started at 9:30am circa
 
 
+
+# added gene counts version
+
+docker run -it \
+  -v $PWD:/data \
+  ghcr.io/mritchielab/flames:20af1ce
+
+library(FLAMES)
+setwd("/data")
+outdir <- "flames_out_sham2"
+dir.create(outdir, showWarnings = FALSE)
+config_file <- create_config(
+  outdir = outdir,
+  type = "sc_3end",
+  threads = 30,
+  do_barcode_demultiplex = FALSE,
+  barcode_parameters.max_bc_editdistance = 3,
+  isoform_parameters.min_sup_cnt = 10,
+  multithread_isoform_identification = FALSE,
+  oarfish_quantification = FALSE,
+  additional_arguments.oarfish = c("--model-coverage")
+)
+
+sce <- sc_long_pipeline(
+  annotation = "genes.gtf",
+  fastq = "matched_reads.fastq.gz",
+  genome_fa = "genome.fa",
+  outdir = outdir,
+  barcodes_file = "whitelist.csv",
+  config_file = config_file
+)
+
+# trova automaticamente il gene count file
+gene_file <- list.files(
+  outdir,
+  pattern = "gene.*count.*(csv|tsv|txt)$",
+  full.names = TRUE,
+  recursive = TRUE
+)[1]
+
+gene_file
+
+sce <- add_gene_counts(
+  sce,
+  gene_count_file = gene_file
+)

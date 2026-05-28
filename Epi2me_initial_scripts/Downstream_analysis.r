@@ -24,7 +24,7 @@ merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 # Run Harmony
 merged_seurat <- RunHarmony(
   object = merged_seurat,
-  group.by.vars = "ident", # Adjust this based on your batch metadata
+  group.by.vars = "orig.ident", # Adjust this based on your batch metadata
   dims.use = 1:30
 )
 
