@@ -100,10 +100,10 @@ for (subdir in subdirs) {
     seu,
     subset =
       nCount_RNA > 500 &
-      nFeature_RNA > 400 &
+      nFeature_RNA > 500 &
       nFeature_RNA < 8000 &
       log10GenesPerUMI > 0.80 &
-      mitoRatio < 0.10
+      mitoRatio < 0.25
   )
 
   # ------------------------------------------------- #
@@ -185,18 +185,15 @@ saveRDS(
 
 message("DONE.")
 
-merged_seurat = subset(merged_seurat, subset = decontX_contamination < 0.4)
+merged_seurat = subset(merged_seurat, subset = decontX_contamination < 0.2)
+
 DefaultAssay(merged_seurat) <- "RNA"
 
-merged_seurat <- JoinLayers(merged_seurat[["RNA"]])
+merged_seurat[["RNA"]] <- JoinLayers(merged_seurat[["RNA"]])
 
-merged_seurat <- NormalizeData(merged_seurat)
-merged_seurat <- FindVariableFeatures(merged_seurat, nfeatures = 3000)
-merged_seurat <- ScaleData(merged_seurat)
 
-merged_seurat <- RunPCA(merged_seurat, npcs = 30)
 
-merged_seurat <- RunHarmony(
-  merged_seurat,
-  group.by = "orig.ident"
-)
+
+
+
+
