@@ -1,3 +1,8 @@
+
+#
+# This script was adjusted to add Doublet finder, keeping this as fallback in case of issues 
+#
+
 library(Seurat)
 library(Matrix)
 library(rtracklayer)
@@ -178,10 +183,10 @@ merged_seurat <- Reduce(
 # =====================================================
 # SAVE
 # =====================================================
-saveRDS(
-  merged_seurat,
-  file = file.path(data_dir, "merged_seurat.rds")
-)
+#saveRDS(
+#  merged_seurat,
+#  file = file.path(data_dir, "merged_seurat.rds")
+#)
 
 message("DONE.")
 

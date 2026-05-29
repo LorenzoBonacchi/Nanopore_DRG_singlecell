@@ -9,7 +9,6 @@ library(SingleCellExperiment)
 library(celda)
 library(harmony)
 library(DoubletFinder)
-
 library(dplyr)
 library(tibble)
 
@@ -186,7 +185,7 @@ run_doubletfinder_custom <- function(
     pN = 0.25,
     pK = optimal.pk,
     nExp = nExp.poi.adj,
-    reuse.pANN = FALSE,
+    reuse.pANN = NULL,
     sct = FALSE
   )
 
@@ -316,7 +315,7 @@ for (subdir in subdirs) {
       nFeature_RNA > 400 &
       nFeature_RNA < 8000 &
       log10GenesPerUMI > 0.80 &
-      mitoRatio < 0.10
+      mitoRatio < 0.15
   )
 
   message(

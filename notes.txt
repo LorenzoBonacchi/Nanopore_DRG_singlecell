@@ -3,7 +3,15 @@ In data loading
 
 # ------------------------------------------------ #
 28 - 05 - 26
-- sistemare Doublet Finder
+- sistemare Doublet Finder 
+- sistemare Addmodule score main filtering
+- sistemare PseudoBulk code
+- Differential Abundance Analysis
+- Creare cartella functions e richiamare da lì 
+
+# ------------------------------------------------ #
+29 - 05 - 26
+- sistemare Doublet Finder --> DONE
 - sistemare Addmodule score main filtering
 - sistemare PseudoBulk code
 - Differential Abundance Analysis

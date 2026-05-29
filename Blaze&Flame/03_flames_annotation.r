@@ -1,7 +1,7 @@
 
 
 library(dplyr)
-
+library(harmony)
 
 merged_seurat <- NormalizeData(merged_seurat)
 merged_seurat <- FindVariableFeatures(merged_seurat, nfeatures = 3000)

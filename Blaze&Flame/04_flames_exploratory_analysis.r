@@ -9,6 +9,66 @@ library(tidyverse)
 library(dplyr)
 library(DESeq2)
 library(limma)
+library(Matrix)
+library(purrr)
+
+head(annotated@meta.data)
+
+# counts matrix
+dim(GetAssayData(annotated, layer = "counts"))
+GetAssayData(annotated, layer = "counts")[1:6,1:6]
+
+kids <- purrr::set_names(levels(annotated$celltype))
+kids
+# Total number of clusters
+nk <- length(kids)
+nk
+# Named vector of sample names
+annotated$condition <- factor(annotated$condition)
+sids <- purrr::set_names(levels(annotated$condition))
+sids
+# Total number of samples 
+ns <- length(sids)
+ns
+
+## Determine the number of cells per sample
+table(annotated$orig.ident)
+
+## Numeric vector of cells per sample
+n_cells <- as.numeric(table(annotated$orig.ident))
+
+## Sample IDs
+sids <- names(table(annotated$orig.ident))
+
+## Match sample order
+m <- match(sids, unique(annotated@meta.data$orig.ident))
+
+annotated$group <- ifelse(
+  grepl("adeno", annotated$orig.ident),
+  "Adeno",
+  "Sham"
+)
+
+ei <- annotated@meta.data %>%
+  distinct(orig.ident, group) %>%
+  mutate(
+    n_cells = as.numeric(table(annotated$orig.ident))
+  )
+
+ei
+
+# ------------------------------------------------ #
+# Count aggregation
+# Aggregate the counts per sample_id and cluster_id
+
+cts <- LayerData(annotated, assay = "RNA", layer = "counts")
+groups <- annotated@meta.data[, c("celltype", "orig.ident")]
+group_index <- interaction(groups$celltype, groups$orig.ident)
+pb <- rowsum(as.matrix(t(cts)), group_index)
+
+
+pb <- t(pb)
+
 
 meta_columns <- c("orig.ident", "condition")
 meta <- annotated@meta.data %>%
