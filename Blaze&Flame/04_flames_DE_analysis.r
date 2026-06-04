@@ -17,7 +17,7 @@ library(scater)
 head(annotated@meta.data)
 
 annotated$condition <- ifelse(
-  grepl("adeno", merged_seurat$condition),
+  grepl("adeno", annotated$condition),
   "adeno",
   "sham"
 )

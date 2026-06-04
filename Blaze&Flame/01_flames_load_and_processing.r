@@ -311,11 +311,11 @@ for (subdir in subdirs) {
   seu <- subset(
     seu,
     subset =
-      nCount_RNA > 500 &
+      nCount_RNA > 1000 &
       nFeature_RNA > 400 &
       nFeature_RNA < 8000 &
       log10GenesPerUMI > 0.80 &
-      mitoRatio < 0.15
+      mitoRatio < 0.25
   )
 
   message(
