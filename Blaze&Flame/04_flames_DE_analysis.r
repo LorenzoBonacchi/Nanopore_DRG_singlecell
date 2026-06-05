@@ -21,7 +21,30 @@ annotated$condition <- ifelse(
   "adeno",
   "sham"
 )
+# =====================================================
+# GLOBAL GENE FILTER
+# Keep genes expressed in >=1% of cells
+# =====================================================
 
+counts <- GetAssayData(
+  annotated,
+  layer = "counts"
+)
+
+keep.genes <- rowSums(counts > 0) >= 0.01 * ncol(counts)
+
+cat(
+  "Keeping",
+  sum(keep.genes),
+  "genes out of",
+  length(keep.genes),
+  "\n"
+)
+
+annotated <- subset(
+  annotated,
+  features = rownames(annotated)[keep.genes]
+)
 # Using 'label' and 'sample' as our two factors; each column of the output
 # corresponds to one unique combination of these two factors.
 summed <- aggregateAcrossCells(
@@ -177,7 +200,9 @@ head(sort(sig.consistency, decreasing = TRUE), 10)
 # =========================
 
 cell <- "Immune"
-
+cell <- "Neurons"
+#cell <- "Satellite"
+#cell <- "Schwann"
 # genes not DE in other cell types
 not.de <- !is.de
 not.de.other <- rowMeans(not.de[, colnames(not.de) != cell, drop = FALSE]) == 1

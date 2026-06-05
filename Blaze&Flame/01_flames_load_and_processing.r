@@ -349,7 +349,7 @@ for (subdir in subdirs) {
 
   seu <- FindClusters(
     seu,
-    resolution = 0.5
+    resolution = 1
   )
 
   # ------------------------------------------------- #
@@ -404,7 +404,7 @@ for (subdir in subdirs) {
 
   seu <- subset(
     seu,
-    subset = decontX_contamination < 0.2
+    subset = decontX_contamination < 0.1
   )
 
   message(

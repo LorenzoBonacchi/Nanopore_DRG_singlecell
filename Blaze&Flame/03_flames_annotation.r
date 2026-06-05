@@ -1,39 +1,71 @@
-
-
-library(dplyr)
+library(Seurat)
 library(harmony)
+library(dplyr)
 
+
+
+DefaultAssay(merged_seurat) <- "RNA"
 merged_seurat <- NormalizeData(merged_seurat)
-merged_seurat <- FindVariableFeatures(merged_seurat, selection.method='vst', nfeatures=2000)
-var_genes <- VariableFeatures(merged_seurat) 
-var_genes <- var_genes[!grepl("^mt-", var_genes)] 
-VariableFeatures(merged_seurat) <- var_genes
-merged_seurat <- ScaleData(merged_seurat)
-
-merged_seurat <- RunPCA(merged_seurat, VariableFeatures(merged_seurat))
-
-#merged_seurat <- RunHarmony(
-#  merged_seurat,
-#  group.by = "orig.ident"
-#)
-merged_seurat <- IntegrateLayers(
-  object = merged_seurat,
-  method = CCAIntegration,
-  orig.reduction = "pca",
-  new.reduction = "integrated.cca",
-  verbose = FALSE
+merged_seurat <- FindVariableFeatures(
+  merged_seurat,
+  selection.method = "vst",
+  nfeatures = 2000
 )
 
-#resolutions <- c(0.1, 0.2, 0.3, 0.4, 0.5, 1.0) 
-resolutions <- c(0.3) 
-merged_seurat <- RunUMAP(merged_seurat, reduction = "harmony", dims = 1:30)
-merged_seurat <- FindNeighbors(merged_seurat, reduction = "harmony", dims = 1:30)
-merged_seurat <- FindClusters(merged_seurat, resolution = resolutions)
+var_genes <- VariableFeatures(merged_seurat)
+var_genes <- var_genes[
+  !grepl("^mt-|^Mt-", var_genes)
+]
+VariableFeatures(merged_seurat) <- var_genes
 
+merged_seurat <- ScaleData(
+  merged_seurat,
+  features = VariableFeatures(merged_seurat)
+)
+merged_seurat <- RunPCA(
+  merged_seurat,
+  features = VariableFeatures(merged_seurat)
+)
+merged_seurat <- RunHarmony(
+  merged_seurat,
+  group.by.vars = "condition",
+)
+merged_seurat <- RunUMAP(
+  merged_seurat,
+  reduction = "harmony",
+  dims = 1:30
+)
+merged_seurat <- FindNeighbors(
+  merged_seurat,
+  reduction = "harmony",
+  dims = 1:30
+)
+merged_seurat <- FindClusters(
+  merged_seurat,
+  resolution = 0.5
+)
 
+# Find All Markers -------------------- #
 merged_seurat = JoinLayers(merged_seurat)
-markers <- FindAllMarkers(object = merged_seurat, logfc.threshold = 0.1, only.pos = TRUE, test.use="wilcox", min.pct = 0.01,assay="RNA")
+markers <- FindAllMarkers(
+  merged_seurat,
+  only.pos = TRUE,
+  test.use = "wilcox",
+  logfc.threshold = 0.25,
+  min.pct = 0.25
+)
+markers_top <- markers %>%
+  filter(p_val_adj < 0.05,
+         pct.1 > 0.25,
+         avg_log2FC > 0.25)
+markers_top <- markers_top %>%
+  group_by(cluster) %>%
+  slice_max(avg_log2FC, n = 20, with_ties = FALSE) %>%
+  ungroup()
 
+
+
+# Dotplots ---------------------------- #
 neurons = c("Snap25", "Rbfox3", "Pvalb")
 sgc = c("Fabp7", "Ednrb")
 myelinating_schwann = c("Mpz", "Mbp")
@@ -61,6 +93,7 @@ wang_rubbish = c("Malat1")
 wang = c(wang_schwann,wang_fibroblasts,wang_endothelial,wang_smooth_muscle,wang_macrophages,wang_capillary,wang_immune,wang_rbc,wang_neurons,wang_rubbish)
 
 
+# SingleR annotation ---------------------------- #
 library(celldex)
 library(SingleR)
 
@@ -77,9 +110,16 @@ combined$singleR.main = pred$labels[match(rownames(combined@meta.data),rownames(
 
 # First annotation attempt with major cell type markers
 # Rename idents by celltype
-new.cluster.ids = c("Neurons","Neurons","Neurons","Neurons","Neurons","Schwann","Satellite","Endothelial","Immune")
+new.cluster.ids = c("Neurons","Neurons","Schwann","SGC","Schwann","Endothelial","Immune","Neurons","cluster8","cluster9","cluster10")
 annotated = combined
 names(new.cluster.ids) <- levels(annotated)
 annotated <- RenameIdents(annotated, new.cluster.ids)
 annotated$celltype = Idents(annotated)
 save(annotated,combined,markers,file="start_pseudobulk.RData")
+
+
+neurons <- subset(annotated, celltype == "Neurons")
+non_neurons <- subset(annotated, celltype != "Neurons")
+
+
+
