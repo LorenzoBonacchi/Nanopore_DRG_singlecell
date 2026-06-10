@@ -62,7 +62,7 @@ markers_top <- markers_top %>%
   group_by(cluster) %>%
   slice_max(avg_log2FC, n = 20, with_ties = FALSE) %>%
   ungroup()
-
+markers_top = as.data.frame(markers_top)
 
 
 # Dotplots ---------------------------- #
@@ -80,7 +80,7 @@ all = c(neurons, sgc, myelinating_schwann, nonmyelinating_schwann, immune, endot
 
 
 # Wang annotation
-wang_neurons = c("Snap25","Syt1","Avil","Gap43","Nefl","Nefm")
+wang_neurons = c("Snap25","Syt1","Avil","Gap43","Nefl","Nefm","Nefh","Calca")
 wang_schwann = c("Mpz","Plp1")
 wang_fibroblasts = c("Dcn","Apod")
 wang_endothelial = c("Cldn5","Ly6c1")
@@ -92,6 +92,20 @@ wang_rbc = c("Hba-a1")
 wang_rubbish = c("Malat1")
 wang = c(wang_schwann,wang_fibroblasts,wang_endothelial,wang_smooth_muscle,wang_macrophages,wang_capillary,wang_immune,wang_rbc,wang_neurons,wang_rubbish)
 
+
+#score
+
+axon_genes <- c("Nefl", "Tubb2a", "Tubb2b", "Stmn3", "Gphn", "Cadm2")
+myelin_genes <- c("Mbp", "Mpz", "Pmp2", "Plp1", "Mal", "Mag")
+glia_support_genes <- c("Apoe", "Fabp7", "Ndrg1", "S100b", "Cnp", "Fxyd1")
+neuron_genes <- c("Snap25","Syp","Rbfox3","Tubb3","Map2","Nefl","Syn1","Syt1")
+
+merged_seurat <- AddModuleScore(merged_seurat,features = list(axon_genes),name = "axon_score")
+merged_seurat <- AddModuleScore(merged_seurat, features = list(myelin_genes), name = "myelin_score")
+merged_seurat <- AddModuleScore(merged_seurat, features = list(glia_support_genes), name = "glia_score")
+merged_seurat <- AddModuleScore(merged_seurat, features = list(neuron_genes), name = "neuron_score")
+
+FeaturePlot(merged_seurat, features=c("axon_score1","myelin_score1","glia_score1","neuron_score1"))
 
 # SingleR annotation ---------------------------- #
 library(celldex)
@@ -110,7 +124,7 @@ combined$singleR.main = pred$labels[match(rownames(combined@meta.data),rownames(
 
 # First annotation attempt with major cell type markers
 # Rename idents by celltype
-new.cluster.ids = c("Neurons","Neurons","Schwann","SGC","Schwann","Endothelial","Immune","Neurons","cluster8","cluster9","cluster10")
+new.cluster.ids = c("Neurons_0","Neurons_1","Schwann_2","SGC_3","Schwann_4","Endothelial","Neurons_6","Neurons_7","SGC_8","Immune_9","Immune_10","Neurons_11")
 annotated = combined
 names(new.cluster.ids) <- levels(annotated)
 annotated <- RenameIdents(annotated, new.cluster.ids)
@@ -118,8 +132,41 @@ annotated$celltype = Idents(annotated)
 save(annotated,combined,markers,file="start_pseudobulk.RData")
 
 
-neurons <- subset(annotated, celltype == "Neurons")
-non_neurons <- subset(annotated, celltype != "Neurons")
+#neurons <- subset(annotated, celltype == "Neurons")
+#non_neurons <- subset(annotated, celltype != "Neurons")
 
+# fine annotation
+annotated <- FindClusters(annotated, resolution = 1)
+annotated = JoinLayers(annotated)
+markers_fine <- FindAllMarkers(
+  annotated,
+  only.pos = TRUE,
+  test.use = "wilcox",
+  logfc.threshold = 0.25,
+  min.pct = 0.25
+)
+markers_top <- markers_fine %>%
+  filter(p_val_adj < 0.05,
+         pct.1 > 0.25,
+         avg_log2FC > 0.25)
+markers_top <- markers_top %>%
+  group_by(cluster) %>%
+  slice_max(avg_log2FC, n = 20, with_ties = FALSE) %>%
+  ungroup()
+markers_top = as.data.frame(markers_top)
+
+
+neuronal = c("Tac1", "Calca", "Ntrk1", "Ntrk2", "Ntrk3", "Ret", "Piezo2", "Mrgprd", "Mrgpra3", "Pvalb", "Runx3", "Th", "Sst", "Nefh", "Scn10a", "Scn11a")
+neuronal_specific = c("Ntrk3", "Nefh","Gphn","Pvalb", "Fxyd2","Pcp4", "Calca", "Prph", "Pcsk1n")
+
+VlnPlot(
+  neurons,
+  features = c(
+    "mitoRatio",
+    "nFeature_RNA",
+    "nCount_RNA"
+  ),
+  group.by = "seurat_clusters"
+)
 
 

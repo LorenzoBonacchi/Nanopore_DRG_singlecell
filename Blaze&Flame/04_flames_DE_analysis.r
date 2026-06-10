@@ -200,7 +200,7 @@ head(sort(sig.consistency, decreasing = TRUE), 10)
 # =========================
 
 cell <- "Immune"
-cell <- "Neurons"
+cell <- "Neurons_1"
 #cell <- "Satellite"
 #cell <- "Schwann"
 # genes not DE in other cell types
