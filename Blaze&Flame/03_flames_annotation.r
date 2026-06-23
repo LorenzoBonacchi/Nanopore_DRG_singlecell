@@ -124,7 +124,7 @@ combined$singleR.main = pred$labels[match(rownames(combined@meta.data),rownames(
 
 # First annotation attempt with major cell type markers
 # Rename idents by celltype
-new.cluster.ids = c("Neurons_0","Neurons_1","Schwann_2","SGC_3","Schwann_4","Endothelial","Neurons_6","Neurons_7","SGC_8","Immune_9","Immune_10","Neurons_11")
+new.cluster.ids = c("Neurons_0","Neurons_1","Schwann_2","Schwann_3","SGC_4","Endothelial","Neurons_6","Neurons_7","SGC_8","Immune_9","fibroblasts_10")
 annotated = combined
 names(new.cluster.ids) <- levels(annotated)
 annotated <- RenameIdents(annotated, new.cluster.ids)

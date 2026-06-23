@@ -315,7 +315,7 @@ for (subdir in subdirs) {
       nFeature_RNA > 400 &
       nFeature_RNA < 8000 &
       log10GenesPerUMI > 0.80 &
-      mitoRatio < 0.35 #25
+      mitoRatio < 0.25 #25
   )
 
   message(
@@ -404,7 +404,7 @@ for (subdir in subdirs) {
 
   seu <- subset(
     seu,
-    subset = decontX_contamination < 0.05
+    subset = decontX_contamination < 0.1
   )
 
   message(
@@ -479,10 +479,10 @@ merged_seurat <- FindVariableFeatures(
   nfeatures = 3000
 )
 hvgs <- VariableFeatures(merged_seurat)
-hvgs_clean <- hvgs[!grepl("^mt-|^Mt-|^Nefh$|^Calca$", hvgs)]
-
+#hvgs_clean <- hvgs[!grepl("^mt-|^Mt-|^Nefh$|^Calca$", hvgs)]
+#hvgs_clean <- hvgs[!grepl("^mt-|^Mt-", hvgs)]
 # 4. Sovrascrivi i geni variabili con la lista pulita
-VariableFeatures(merged_seurat) <- hvgs_clean
+#VariableFeatures(merged_seurat) <- hvgs_clean
 #merged_seurat <- ScaleData(merged_seurat)
 merged_seurat <- ScaleData(merged_seurat, features = VariableFeatures(merged_seurat))
 merged_seurat <- RunPCA(

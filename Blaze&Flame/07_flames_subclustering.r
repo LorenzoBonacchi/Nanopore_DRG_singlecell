@@ -33,6 +33,50 @@ transition = c("Ascl1","Egfr","Sox4","Hes1")
 neurons_markers = c("Snap25","Rbfox3","Pvalb","Gfra3","Tac1","Calca","Gal","Cldn9","Zcchc12","Sstr2","Dcn","Trpm8",
   "Rxfb1","Nppb","Th","Fam19a4","Mrgprb4","Mrgpra3","Mrgprd","Lpar3","Gm7271","S100b","Nefh","Wnt7a","Trappc3l","Ntrk3","Gfra1","Prokr2","smr2","Baiap2l1","Atf3")
 
+## Notebook markers
+neurons_gen = c("Snap25", "Rbfox3", "Pvalb", "Nefh", "Tubb3")
+sgc_gen = c("Fabp7", "Ednrb", "Apoe", "Slc1a3", "Gja1")
+mysc = c("Mpz", "Mbp", "Pllp")
+nomysc = c("Scn7a", "Ngfr", "Ncam1", "L1cam") 
+fibro = c("Pdgfra", "Tbx18", "Dcn", "Apod")
+endo = c("Pecam1", "Flt1", "Cldn5")
+immune = c("Ptprc", "Ccr2", "Cd74", "Aif1", "Cd68")
+pericytes = c("Notch3", "Kcnj8", "Pdgfrb")
+proprioceptors = c("Pvalb", "Ntrk3", "Etv1", "Runx3")
+lowthr_alphabeta = c("Ntrk3", "Ntrk2")
+lowthr_alphaomega = c("Trappc3l", "Ntrk2", "Gfra2")
+nociceptors = c("Tac1", "Calca", "Adcyap1")
+termo = c("Trpv1", "Trpm8")
+pep_alphaomega = c("Ntrk1", "Nefh")
+np1 = c("Mrgprd", "Lpar3", "Gfra2")
+np2 = c("Mrgpra3", "Mrgprx1")
+np3 = c("Sst", "Nppb", "Il31ra", "Osmr", "Jak1")
+cltmr = c("Th", "Fam19a4")
+scprecursor = c("Sox10", "Mki67", "Top2a")
+immature_sc = c("Ngfr", "Ncam1", "L1cam")
+pro_myelin_sc = c("Pou3f1", "Cdkn1c")
+
+
+all_neu = c(neurons_gen, sgc_gen, mysc, nomysc, fibro, endo, immune, pericytes, proprioceptors, lowthr_alphabeta, lowthr_alphaomega, nociceptors, termo, pep_alphaomega, np1, np2, np3, cltmr)
+all_sc = c(sgc_gen, mysc, nomysc, scprecursor, immature_sc, pro_myelin_sc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 1. Isola i cluster identificati come neuroni nel primo round
